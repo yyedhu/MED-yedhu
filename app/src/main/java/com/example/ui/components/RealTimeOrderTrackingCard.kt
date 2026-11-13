@@ -51,12 +51,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -123,6 +124,7 @@ private const val LAYER_PARTNER_PULSE = "kochi-partner-pulse-layer"
 private const val LAYER_PARTNER_PIN = "kochi-partner-pin-layer"
 private const val ICON_PARTNER_PIN = "kochi-partner-pin-icon"
 
+@Immutable
 data class RouteGeoBounds(
     val minLat: Double,
     val maxLat: Double,
@@ -180,16 +182,21 @@ fun RealTimeOrderTrackingCard(
         )
     }
 
-    val pulseTransition = rememberInfiniteTransition(label = "liveDotPulse")
-    val dotAlpha by pulseTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 0.3f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 800),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "liveDotAlpha"
-    )
+    val dotAlpha = if (tracking.status.isTerminal) {
+        1f
+    } else {
+        val pulseTransition = rememberInfiniteTransition(label = "liveDotPulse")
+        val animatedAlpha by pulseTransition.animateFloat(
+            initialValue = 1f,
+            targetValue = 0.3f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 800),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "liveDotAlpha"
+        )
+        animatedAlpha
+    }
 
     Surface(
         color = MaterialTheme.colorScheme.surface,
@@ -466,47 +473,14 @@ fun RealTimeOrderTrackingMap(
     var followRiderMode by remember(tracking.orderId) { mutableStateOf(false) }
     var mapLibreMap by remember { mutableStateOf<MapLibreMap?>(null) }
     var loadedStyle by remember { mutableStateOf<Style?>(null) }
+    val latestTracking by rememberUpdatedState(tracking)
 
-    // 64-bit smooth coordinate interpolation so rider glides between Firestore GPS updates
-    var displayedPartnerLat by remember(tracking.orderId) { mutableDoubleStateOf(tracking.partnerLatitude) }
-    var displayedPartnerLon by remember(tracking.orderId) { mutableDoubleStateOf(tracking.partnerLongitude) }
-    val glideAnim = remember(tracking.orderId) { Animatable(1f) }
-
-    LaunchedEffect(tracking.partnerLatitude, tracking.partnerLongitude) {
-        val startLat = displayedPartnerLat
-        val startLon = displayedPartnerLon
-        val targetLat = tracking.partnerLatitude
-        val targetLon = tracking.partnerLongitude
-        if (startLat == targetLat && startLon == targetLon) return@LaunchedEffect
-
-        glideAnim.snapTo(0f)
-        glideAnim.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(durationMillis = 850, easing = FastOutSlowInEasing)
-        ) {
-            val (lat, lon) = RealTimeTrackingMath.interpolateCoordinate(
-                startLat = startLat,
-                startLon = startLon,
-                endLat = targetLat,
-                endLon = targetLon,
-                fraction = value
-            )
-            displayedPartnerLat = lat
-            displayedPartnerLon = lon
-        }
+    // Store mutable interpolated coordinates outside Compose Snapshot state so MapLibre updates at 60fps with 0 recompositions
+    val coordHolder = remember(tracking.orderId) {
+        doubleArrayOf(tracking.partnerLatitude, tracking.partnerLongitude)
     }
-
-    // Pulsing GPS radar ring around the delivery partner marker
-    val pulseTransition = rememberInfiniteTransition(label = "partnerMapPulse")
-    val pulseProgress by pulseTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1400, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "partnerRadarProgress"
-    )
+    val glideAnim = remember(tracking.orderId) { Animatable(1f) }
+    val pulseAnim = remember { Animatable(0f) }
 
     val mapView = remember(context) {
         val appCtx = context.applicationContext
@@ -534,7 +508,7 @@ fun RealTimeOrderTrackingMap(
                 isLogoEnabled = false
             }
             map.cameraPosition = CameraPosition.Builder()
-                .target(LatLng(tracking.partnerLatitude, tracking.partnerLongitude))
+                .target(LatLng(latestTracking.partnerLatitude, latestTracking.partnerLongitude))
                 .zoom(13.5)
                 .build()
 
@@ -549,9 +523,9 @@ fun RealTimeOrderTrackingMap(
                 )
                 updateOpenFreeMapSources(
                     style = style,
-                    tracking = tracking,
-                    partnerLat = displayedPartnerLat,
-                    partnerLon = displayedPartnerLon
+                    tracking = latestTracking,
+                    partnerLat = coordHolder[0],
+                    partnerLon = coordHolder[1]
                 )
                 loadedStyle = style
             }
@@ -586,26 +560,75 @@ fun RealTimeOrderTrackingMap(
         }
     }
 
-    LaunchedEffect(loadedStyle, tracking, displayedPartnerLat, displayedPartnerLon) {
+    // Smooth 64-bit GPS glide directly into MapLibre GeoJsonSources without triggering Compose recomposition
+    LaunchedEffect(loadedStyle, tracking) {
         val style = loadedStyle ?: return@LaunchedEffect
-        if (style.isFullyLoaded) {
+        if (!style.isFullyLoaded) return@LaunchedEffect
+
+        val startLat = coordHolder[0]
+        val startLon = coordHolder[1]
+        val targetLat = tracking.partnerLatitude
+        val targetLon = tracking.partnerLongitude
+
+        if (startLat == targetLat && startLon == targetLon) {
             updateOpenFreeMapSources(
                 style = style,
                 tracking = tracking,
-                partnerLat = displayedPartnerLat,
-                partnerLon = displayedPartnerLon
+                partnerLat = targetLat,
+                partnerLon = targetLon
             )
+            return@LaunchedEffect
+        }
+
+        glideAnim.snapTo(0f)
+        glideAnim.animateTo(
+            targetValue = 1f,
+            animationSpec = tween(durationMillis = 850, easing = FastOutSlowInEasing)
+        ) {
+            val (lat, lon) = RealTimeTrackingMath.interpolateCoordinate(
+                startLat = startLat,
+                startLon = startLon,
+                endLat = targetLat,
+                endLon = targetLon,
+                fraction = value
+            )
+            coordHolder[0] = lat
+            coordHolder[1] = lon
+            if (style.isFullyLoaded) {
+                updateOpenFreeMapSources(
+                    style = style,
+                    tracking = tracking,
+                    partnerLat = lat,
+                    partnerLon = lon
+                )
+            }
         }
     }
 
-    LaunchedEffect(loadedStyle, pulseProgress, tracking.status, tracking.hasRiderArrived) {
+    // Radar pulse runs inside a single coroutine without recomposing Compose or pausing when hidden
+    val showPulse = !tracking.status.isTerminal && !tracking.hasRiderArrived
+    LaunchedEffect(loadedStyle, showPulse, isPaused) {
         val style = loadedStyle ?: return@LaunchedEffect
         if (!style.isFullyLoaded) return@LaunchedEffect
-        val showPulse = !tracking.status.isTerminal && !tracking.hasRiderArrived
-        style.getLayerAs<CircleLayer>(LAYER_PARTNER_PULSE)?.setProperties(
-            circleRadius(14f + 16f * pulseProgress),
-            circleOpacity(if (showPulse) (1f - pulseProgress) * 0.42f else 0f)
-        )
+        val pulseLayer = style.getLayerAs<CircleLayer>(LAYER_PARTNER_PULSE) ?: return@LaunchedEffect
+        if (!showPulse || isPaused) {
+            pulseLayer.setProperties(circleOpacity(0f))
+            return@LaunchedEffect
+        }
+        while (true) {
+            pulseAnim.snapTo(0f)
+            pulseAnim.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 1400, easing = FastOutSlowInEasing)
+            ) {
+                if (style.isFullyLoaded) {
+                    pulseLayer.setProperties(
+                        circleRadius(14f + 16f * value),
+                        circleOpacity((1f - value) * 0.42f)
+                    )
+                }
+            }
+        }
     }
 
     LaunchedEffect(

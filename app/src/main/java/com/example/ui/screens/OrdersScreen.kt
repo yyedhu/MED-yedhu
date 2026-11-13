@@ -69,7 +69,15 @@ import com.example.ui.components.RealTimeOrderTrackingCard
 import com.example.ui.components.StatusPill
 import com.example.ui.components.formatCurrency
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
+
+private val OrderDateFormat = object : ThreadLocal<SimpleDateFormat>() {
+    override fun initialValue(): SimpleDateFormat = SimpleDateFormat("MMM d, h:mm a", Locale.US)
+}
+
+private fun formatOrderTimestamp(date: Date): String =
+    OrderDateFormat.get()?.format(date) ?: "Just now"
 
 @Composable
 fun OrdersScreen(
@@ -149,7 +157,7 @@ fun OrdersScreen(
         verticalArrangement = Arrangement.spacedBy(14.dp),
         modifier = modifier.fillMaxSize()
     ) {
-        item(key = "orders_header") {
+        item(key = "orders_header", contentType = "section_header") {
             Text(
                 text = "Your Medicine Orders (${orders.size})",
                 style = MaterialTheme.typography.headlineSmall,
@@ -158,7 +166,7 @@ fun OrdersScreen(
         }
 
         if (activeLiveOrder != null) {
-            item(key = "realtime_tracking_hero_${activeLiveOrder.id}") {
+            item(key = "realtime_tracking_hero_${activeLiveOrder.id}", contentType = "tracking_hero") {
                 RealTimeOrderTrackingCard(
                     order = activeLiveOrder,
                     liveTransitFraction = liveTransitProgress[activeLiveOrder.id],
@@ -209,9 +217,7 @@ private fun OrderCard(
     val status = tracking.status
     val canCancel = status == OrderStatus.PLACED
     val formattedDate = remember(order.createdAt) {
-        order.createdAt?.toDate()?.let {
-            SimpleDateFormat("MMM d, h:mm a", Locale.US).format(it)
-        } ?: "Just now"
+        order.createdAt?.toDate()?.let(::formatOrderTimestamp) ?: "Just now"
     }
 
     Surface(

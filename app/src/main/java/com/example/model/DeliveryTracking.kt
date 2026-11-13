@@ -1,5 +1,6 @@
 package com.example.model
 
+import androidx.compose.runtime.Immutable
 import com.example.data.PharmacyCatalog
 import java.util.Locale
 import kotlin.math.abs
@@ -9,6 +10,7 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.sqrt
 
+@Immutable
 data class DeliveryPartner(
     val id: String,
     val name: String,
@@ -18,6 +20,7 @@ data class DeliveryPartner(
     val completedDeliveries: Int
 )
 
+@Immutable
 data class TrackingCheckpoint(
     val title: String,
     val locationDetail: String,
@@ -25,6 +28,7 @@ data class TrackingCheckpoint(
     val isCurrent: Boolean
 )
 
+@Immutable
 data class OrderTrackingSnapshot(
     val orderId: String,
     val status: OrderStatus,

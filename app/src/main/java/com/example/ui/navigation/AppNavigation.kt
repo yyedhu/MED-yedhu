@@ -5,11 +5,14 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -373,6 +376,18 @@ private fun MediRelayAuthenticatedShell(
                     NavHost(
                         navController = navController,
                         startDestination = ROUTE_STORES,
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing))
+                        },
                         modifier = Modifier
                             .widthIn(max = 840.dp)
                             .fillMaxSize()
@@ -448,7 +463,25 @@ private fun MediRelayAuthenticatedShell(
 
                         composable(
                             route = ROUTE_STORE_DETAIL,
-                            arguments = listOf(navArgument("storeId") { type = NavType.StringType })
+                            arguments = listOf(navArgument("storeId") { type = NavType.StringType }),
+                            enterTransition = {
+                                slideInHorizontally(
+                                    initialOffsetX = { it / 4 },
+                                    animationSpec = tween(durationMillis = 220, easing = FastOutSlowInEasing)
+                                ) + fadeIn(animationSpec = tween(durationMillis = 220))
+                            },
+                            exitTransition = {
+                                fadeOut(animationSpec = tween(durationMillis = 160))
+                            },
+                            popEnterTransition = {
+                                fadeIn(animationSpec = tween(durationMillis = 180))
+                            },
+                            popExitTransition = {
+                                slideOutHorizontally(
+                                    targetOffsetX = { it / 4 },
+                                    animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing)
+                                ) + fadeOut(animationSpec = tween(durationMillis = 200))
+                            }
                         ) { entry ->
                             val storeId = entry.arguments?.getString("storeId") ?: ""
                             StoreDetailScreen(

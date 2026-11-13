@@ -1,6 +1,7 @@
 package com.example.ui
 
 import android.util.Log
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.MediRelayRepository
@@ -23,6 +24,7 @@ import com.example.model.PromoCatalog
 import com.example.model.StoreSortOption
 import com.google.firebase.firestore.FirebaseFirestoreException
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,10 +33,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+@Immutable
 data class OrderAlertEvent(
     val id: String,
     val orderId: String,
@@ -42,6 +46,7 @@ data class OrderAlertEvent(
     val message: String
 )
 
+@Immutable
 sealed interface UiState<out T> {
     data object Loading : UiState<Nothing>
     data class Success<T>(val data: T) : UiState<T>
@@ -222,7 +227,7 @@ class MediRelayViewModel(
             )
             StoreSortOption.LOW_FEE -> matched.sortedBy { it.deliveryFee }
         }
-    }.stateIn(
+    }.flowOn(Dispatchers.Default).stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
         initialValue = PharmacyCatalog.stores
@@ -244,7 +249,7 @@ class MediRelayViewModel(
             CatalogSortOption.PRICE_LOW_HIGH -> base.sortedBy { it.price }
             CatalogSortOption.HIGHEST_DISCOUNT -> base.sortedByDescending { it.discountPercent }
         }
-    }.stateIn(
+    }.flowOn(Dispatchers.Default).stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
         initialValue = PharmacyCatalog.offerings
@@ -270,7 +275,7 @@ class MediRelayViewModel(
             CatalogSortOption.PRICE_LOW_HIGH -> groups.sortedBy { it.lowestPrice }
             CatalogSortOption.HIGHEST_DISCOUNT -> groups.sortedByDescending { it.maxDiscountPercent }
         }
-    }.stateIn(
+    }.flowOn(Dispatchers.Default).stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
         initialValue = PharmacyCatalog.distinctMedicines()

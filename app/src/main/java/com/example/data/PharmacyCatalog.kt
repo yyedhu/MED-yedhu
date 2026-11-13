@@ -394,40 +394,60 @@ object PharmacyCatalog {
         "Kaloor"
     )
 
-    fun matchesStoreQuery(store: MedicalStore, query: String): Boolean {
-        val tokens = query.trim().lowercase().split(Regex("\\s+")).filter { it.isNotEmpty() }
-        if (tokens.isEmpty()) return true
-        val storeOfferings = offeringsForStore(store.id)
-        return tokens.all { token ->
-            store.name.contains(token, ignoreCase = true) ||
-                store.neighborhood.contains(token, ignoreCase = true) ||
-                store.specialties.any { it.contains(token, ignoreCase = true) } ||
-                store.accentTag.contains(token, ignoreCase = true) ||
-                storeOfferings.any {
-                    it.name.contains(token, ignoreCase = true) ||
-                        it.genericName.contains(token, ignoreCase = true)
-                }
+    private val WHITESPACE_REGEX = Regex("\\s+")
+
+    private val storeSearchIndexMap: Map<String, String> = stores.associate { store ->
+        val offeringText = offeringsForStore(store.id).joinToString(" ") {
+            "${it.name} ${it.genericName}"
         }
+        val combined = buildString {
+            append(store.name).append(' ')
+            append(store.neighborhood).append(' ')
+            append(store.accentTag).append(' ')
+            append(store.specialties.joinToString(" ")).append(' ')
+            append(offeringText)
+        }.lowercase()
+        store.id to combined
+    }
+
+    private val offeringSearchIndexMap: Map<String, String> = offerings.associate { item ->
+        val storeNeighborhood = storeById(item.storeId)?.neighborhood.orEmpty()
+        val combined = buildString {
+            append(item.name).append(' ')
+            append(item.genericName).append(' ')
+            append(item.storeName).append(' ')
+            append(item.category.label).append(' ')
+            append(storeNeighborhood)
+        }.lowercase()
+        "${item.storeId}__${item.id}" to combined
+    }
+
+    fun matchesStoreQuery(store: MedicalStore, query: String): Boolean {
+        val trimmed = query.trim().lowercase()
+        if (trimmed.isEmpty()) return true
+        val tokens = trimmed.split(WHITESPACE_REGEX).filter { it.isNotEmpty() }
+        val indexedText = storeSearchIndexMap[store.id] ?: return false
+        return tokens.all { token -> indexedText.contains(token) }
     }
 
     fun searchStores(
         query: String,
         candidateStores: List<MedicalStore> = stores
-    ): List<MedicalStore> = candidateStores.filter { matchesStoreQuery(it, query) }
+    ): List<MedicalStore> {
+        val trimmed = query.trim()
+        if (trimmed.isEmpty()) return candidateStores
+        return candidateStores.filter { matchesStoreQuery(it, trimmed) }
+    }
 
     fun searchOfferings(query: String, category: MedicineCategory): List<MedicineOffering> {
-        val tokens = query.trim().lowercase().split(Regex("\\s+")).filter { it.isNotEmpty() }
+        val trimmed = query.trim().lowercase()
+        val tokens = if (trimmed.isEmpty()) emptyList() else trimmed.split(WHITESPACE_REGEX).filter { it.isNotEmpty() }
         return offerings.filter { item ->
             val categoryOk = category == MedicineCategory.ALL || item.category == category
-            val store = storeById(item.storeId)
-            val queryOk = tokens.isEmpty() || tokens.all { token ->
-                item.name.contains(token, ignoreCase = true) ||
-                    item.genericName.contains(token, ignoreCase = true) ||
-                    item.storeName.contains(token, ignoreCase = true) ||
-                    item.category.label.contains(token, ignoreCase = true) ||
-                    (store?.neighborhood?.contains(token, ignoreCase = true) == true)
-            }
-            categoryOk && queryOk
+            if (!categoryOk) return@filter false
+            if (tokens.isEmpty()) return@filter true
+            val indexedText = offeringSearchIndexMap["${item.storeId}__${item.id}"].orEmpty()
+            tokens.all { token -> indexedText.contains(token) }
         }
     }
 

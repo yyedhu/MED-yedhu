@@ -264,6 +264,7 @@ data class MedicineGroup(
     val maxDiscountPercent: Int get() = storeOfferings.maxOfOrNull { it.discountPercent } ?: 0
 }
 
+@Immutable
 @IgnoreExtraProperties
 data class DeliveryAddress(
     @DocumentId val id: String = "",
@@ -277,6 +278,7 @@ data class DeliveryAddress(
     @ServerTimestamp val updatedAt: Timestamp? = null
 )
 
+@Immutable
 @IgnoreExtraProperties
 data class CartItem(
     @DocumentId val id: String = "",
@@ -293,6 +295,7 @@ data class CartItem(
     @ServerTimestamp val updatedAt: Timestamp? = null
 )
 
+@Immutable
 @IgnoreExtraProperties
 data class MedicineOrder(
     @DocumentId val id: String = "",
@@ -321,6 +324,7 @@ data class MedicineOrder(
     @ServerTimestamp val updatedAt: Timestamp? = null
 )
 
+@Immutable
 @IgnoreExtraProperties
 data class LiveOrderTracking(
     @DocumentId val id: String = "",

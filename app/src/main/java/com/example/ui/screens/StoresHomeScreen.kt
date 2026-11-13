@@ -285,7 +285,7 @@ fun StoresHomeScreen(
         ) {
             // Active Delivery Partner Live Tracking Banner
             if (!isSearching && activeOrder != null) {
-                item(key = "active_order_banner") {
+                item(key = "active_order_banner", contentType = "active_banner") {
                     val tracking = remember(activeOrder, liveTransitFraction, liveTracking) {
                         DeliveryTrackerEngine.buildTrackingSnapshot(
                             order = activeOrder,
@@ -350,7 +350,7 @@ fun StoresHomeScreen(
 
             // Kochi Location Pill Header
             if (!isSearching) {
-                item(key = "kochi_location_header") {
+                item(key = "kochi_location_header", contentType = "location_header") {
             val isAddressInKochi = KochiServiceArea.isKochiAddress(activeAddress)
             Surface(
                 color = MaterialTheme.colorScheme.surface,
@@ -422,7 +422,7 @@ fun StoresHomeScreen(
 
         // Swiggy / Zomato style Kochi Offers Strip
         if (!isSearching) {
-            item(key = "promo_offers_carousel") {
+            item(key = "promo_offers_carousel", contentType = "horizontal_strip") {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
                         text = "Kochi Deals & Coupons",
@@ -446,7 +446,7 @@ fun StoresHomeScreen(
 
             // Swiggy / Zomato Quick Reorder Strip (for returning customers)
             if (reorderCandidates.isNotEmpty()) {
-                item(key = "quick_reorder_strip") {
+                item(key = "quick_reorder_strip", contentType = "horizontal_strip") {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
                             text = "Order Again from Kochi Stores",
@@ -470,7 +470,7 @@ fun StoresHomeScreen(
         }
 
         // Swiggy / Zomato Sort & Quick Filter Bar
-        item(key = "sort_and_quick_filters") {
+        item(key = "sort_and_quick_filters", contentType = "filter_strip") {
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -550,7 +550,7 @@ fun StoresHomeScreen(
         }
 
         // Kochi Medical Stores Feed Cards (Swiggy/Zomato Restaurant Card Style)
-        item(key = "stores_section_header") {
+        item(key = "stores_section_header", contentType = "section_header") {
             Text(
                 text = "Kochi Medical Stores (${stores.size})",
                 style = MaterialTheme.typography.titleLarge,
@@ -559,7 +559,7 @@ fun StoresHomeScreen(
         }
 
         if (stores.isEmpty()) {
-            item(key = "stores_empty") {
+            item(key = "stores_empty", contentType = "empty_card") {
                 Surface(
                     color = MaterialTheme.colorScheme.surface,
                     shape = MaterialTheme.shapes.medium,
@@ -609,7 +609,7 @@ fun StoresHomeScreen(
         }
 
         // Category Filter Chips for Medicine Search
-        item(key = "medicine_category_chips") {
+        item(key = "medicine_category_chips", contentType = "filter_strip") {
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -626,7 +626,7 @@ fun StoresHomeScreen(
         }
 
         // Always-Visible All Medicines Section (Names + Images + Store Price Comparison)
-        item(key = "all_medicines_header") {
+        item(key = "all_medicines_header", contentType = "section_header") {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
