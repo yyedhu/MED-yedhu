@@ -5,8 +5,10 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
@@ -57,6 +59,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -88,6 +91,7 @@ import com.example.notifications.OrderNotificationHelper
 import com.example.ui.MediRelayViewModel
 import com.example.ui.UiState
 import com.example.ui.auth.authStateFlow
+import com.example.ui.components.MediRelaySplashOverlay
 import com.example.ui.components.formatCurrency
 import com.example.ui.screens.AuthScreen
 import com.example.ui.screens.CartCheckoutScreen
@@ -162,16 +166,29 @@ fun AppNavigation(
 ) {
     val currentUser by auth.authStateFlow().collectAsStateWithLifecycle(initialValue = auth.currentUser)
     val user = currentUser
+    var showEntrySplash by rememberSaveable { mutableStateOf(true) }
 
-    if (user == null) {
-        AuthScreen(onAuthSuccess = {})
-    } else {
-        key(user.uid) {
-            MediRelayAuthenticatedShell(
-                currentUserId = user.uid,
-                userDisplayName = user.displayName,
-                userEmail = user.email,
-                userPhoneNumber = user.phoneNumber
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (user == null) {
+            AuthScreen(onAuthSuccess = {})
+        } else {
+            key(user.uid) {
+                MediRelayAuthenticatedShell(
+                    currentUserId = user.uid,
+                    userDisplayName = user.displayName,
+                    userEmail = user.email,
+                    userPhoneNumber = user.phoneNumber
+                )
+            }
+        }
+
+        AnimatedVisibility(
+            visible = showEntrySplash,
+            exit = fadeOut(animationSpec = tween(durationMillis = 360)) +
+                scaleOut(targetScale = 1.05f, animationSpec = tween(durationMillis = 360))
+        ) {
+            MediRelaySplashOverlay(
+                onFinished = { showEntrySplash = false }
             )
         }
     }

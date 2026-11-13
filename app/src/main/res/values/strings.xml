@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">MediRelay</string>
+    <string name="splash_tagline">Kochi\u2019s Fast Pharmacy &amp; Live Rider Relay</string>
+    <string name="splash_loading_label">Connecting to Kochi medical stores…</string>
     <string name="nav_stores">Stores</string>
     <string name="nav_medicines">Medicines</string>
     <string name="nav_cart">Cart</string>
@@ -16,6 +18,7 @@
     <string name="auth_or_continue_with">OR CONTINUE WITH</string>
     <string name="auth_sign_in_google">Sign in with Google</string>
     <string name="search_placeholder">Search medicines, generics, or Kochi stores…</string>
+    <string name="store_search_placeholder">Search medical stores by name or location…</string>
     <string name="hero_badge">KOCHI ONLY • PIN 682XXX</string>
     <string name="hero_title">Kochi neighborhood pharmacies, unified</string>
     <string name="hero_subtitle">Compare prices across licensed Kochi medical stores. Doorstep delivery restricted to Kochi customers only.</string>

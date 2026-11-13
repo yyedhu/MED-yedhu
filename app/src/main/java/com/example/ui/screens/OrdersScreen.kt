@@ -65,6 +65,7 @@ import com.example.model.PaymentMethodOption
 import com.example.ui.components.EmptyStatePanel
 import com.example.ui.components.LiveDeliveryTrackingSheet
 import com.example.ui.components.OrderStatusStepper
+import com.example.ui.components.RealTimeOrderTrackingCard
 import com.example.ui.components.StatusPill
 import com.example.ui.components.formatCurrency
 import java.text.SimpleDateFormat
@@ -139,6 +140,10 @@ fun OrdersScreen(
         return
     }
 
+    val activeLiveOrder = remember(orders) {
+        orders.firstOrNull { !OrderStatus.fromWire(it.status).isTerminal }
+    }
+
     LazyColumn(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 92.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -150,6 +155,18 @@ fun OrdersScreen(
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onBackground
             )
+        }
+
+        if (activeLiveOrder != null) {
+            item(key = "realtime_tracking_hero_${activeLiveOrder.id}") {
+                RealTimeOrderTrackingCard(
+                    order = activeLiveOrder,
+                    liveTransitFraction = liveTransitProgress[activeLiveOrder.id],
+                    liveTracking = liveTrackings[activeLiveOrder.id],
+                    isMapPaused = activeTrackingOrder != null,
+                    onOpenFullDetails = { activeTrackingOrderId = activeLiveOrder.id }
+                )
+            }
         }
 
         items(

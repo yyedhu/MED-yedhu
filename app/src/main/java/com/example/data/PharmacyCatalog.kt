@@ -386,15 +386,47 @@ object PharmacyCatalog {
         return (sameStoreOtc + fallbackOtc).take(limit)
     }
 
+    val kochiQuickLocations: List<String> = listOf(
+        "MG Road",
+        "Edappally",
+        "Kakkanad",
+        "Panampilly Nagar",
+        "Kaloor"
+    )
+
+    fun matchesStoreQuery(store: MedicalStore, query: String): Boolean {
+        val tokens = query.trim().lowercase().split(Regex("\\s+")).filter { it.isNotEmpty() }
+        if (tokens.isEmpty()) return true
+        val storeOfferings = offeringsForStore(store.id)
+        return tokens.all { token ->
+            store.name.contains(token, ignoreCase = true) ||
+                store.neighborhood.contains(token, ignoreCase = true) ||
+                store.specialties.any { it.contains(token, ignoreCase = true) } ||
+                store.accentTag.contains(token, ignoreCase = true) ||
+                storeOfferings.any {
+                    it.name.contains(token, ignoreCase = true) ||
+                        it.genericName.contains(token, ignoreCase = true)
+                }
+        }
+    }
+
+    fun searchStores(
+        query: String,
+        candidateStores: List<MedicalStore> = stores
+    ): List<MedicalStore> = candidateStores.filter { matchesStoreQuery(it, query) }
+
     fun searchOfferings(query: String, category: MedicineCategory): List<MedicineOffering> {
-        val q = query.trim().lowercase()
+        val tokens = query.trim().lowercase().split(Regex("\\s+")).filter { it.isNotEmpty() }
         return offerings.filter { item ->
             val categoryOk = category == MedicineCategory.ALL || item.category == category
-            val queryOk = q.isEmpty() ||
-                item.name.contains(q, ignoreCase = true) ||
-                item.genericName.contains(q, ignoreCase = true) ||
-                item.storeName.contains(q, ignoreCase = true) ||
-                item.category.label.contains(q, ignoreCase = true)
+            val store = storeById(item.storeId)
+            val queryOk = tokens.isEmpty() || tokens.all { token ->
+                item.name.contains(token, ignoreCase = true) ||
+                    item.genericName.contains(token, ignoreCase = true) ||
+                    item.storeName.contains(token, ignoreCase = true) ||
+                    item.category.label.contains(token, ignoreCase = true) ||
+                    (store?.neighborhood?.contains(token, ignoreCase = true) == true)
+            }
             categoryOk && queryOk
         }
     }

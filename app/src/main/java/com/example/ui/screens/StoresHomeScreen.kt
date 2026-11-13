@@ -19,6 +19,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Add
@@ -37,10 +39,12 @@ import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
@@ -55,9 +59,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.R
@@ -178,78 +184,173 @@ fun StoresHomeScreen(
         }
     }
 
-    LazyColumn(
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 92.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
-        modifier = modifier.fillMaxSize()
-    ) {
-        // Active Delivery Partner Live Tracking Banner
-        if (activeOrder != null) {
-            item(key = "active_order_banner") {
-                val tracking = remember(activeOrder, liveTransitFraction, liveTracking) {
-                    DeliveryTrackerEngine.buildTrackingSnapshot(
-                        order = activeOrder,
-                        liveTransitFraction = liveTransitFraction,
-                        liveTracking = liveTracking
-                    )
-                }
-                Surface(
-                    color = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    shape = MaterialTheme.shapes.large,
-                    tonalElevation = 4.dp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onTrackOrder(activeOrder.id) }
-                        .testTag("active_order_banner")
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.padding(14.dp)
-                    ) {
-                        Surface(
-                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.16f),
-                            shape = CircleShape,
-                            modifier = Modifier.size(44.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
+    val focusManager = LocalFocusManager.current
+    val isSearching = searchQuery.isNotBlank()
+
+    Column(modifier = modifier.fillMaxSize()) {
+        // Pinned Pharmacy Search Header (Search by Medical Store Name or Kochi Location)
+        Surface(
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 2.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("store_search_header")
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 10.dp)
+            ) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = onSearchChange,
+                    placeholder = {
+                        Text(
+                            text = stringResource(R.string.store_search_placeholder),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Filled.Search,
+                            contentDescription = "Search pharmacies by name or location",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    },
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(
+                                onClick = { onSearchChange("") },
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .testTag("clear_store_search_icon")
+                            ) {
                                 Icon(
-                                    imageVector = Icons.Filled.TwoWheeler,
-                                    contentDescription = "Track delivery partner",
-                                    tint = MaterialTheme.colorScheme.onPrimary,
-                                    modifier = Modifier.size(22.dp)
+                                    imageVector = Icons.Filled.Close,
+                                    contentDescription = "Clear store search"
                                 )
                             }
                         }
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = tracking.customerNotificationText,
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Text(
-                                text = "${tracking.partner.name} • GPS ${tracking.formattedGpsCoordinates}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                        StatusPill(
-                            text = if (tracking.hasRiderArrived) "Arrived" else "${tracking.remainingMinutes}m GPS",
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            contentColor = MaterialTheme.colorScheme.primary
+                    },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
+                    shape = MaterialTheme.shapes.medium,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("store_search_input")
+                )
+
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(PharmacyCatalog.kochiQuickLocations, key = { "loc_$it" }) { area ->
+                        val selected = searchQuery.trim().equals(area, ignoreCase = true)
+                        FilterChip(
+                            selected = selected,
+                            onClick = {
+                                onSearchChange(if (selected) "" else area)
+                            },
+                            label = { Text(area) },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Filled.LocationOn,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            },
+                            modifier = Modifier
+                                .heightIn(min = 48.dp)
+                                .testTag("location_chip_${area.lowercase().replace(" ", "_")}")
                         )
                     }
                 }
             }
         }
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
-        // Kochi Location Pill Header
-        item(key = "kochi_location_header") {
+        LazyColumn(
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 92.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+        ) {
+            // Active Delivery Partner Live Tracking Banner
+            if (!isSearching && activeOrder != null) {
+                item(key = "active_order_banner") {
+                    val tracking = remember(activeOrder, liveTransitFraction, liveTracking) {
+                        DeliveryTrackerEngine.buildTrackingSnapshot(
+                            order = activeOrder,
+                            liveTransitFraction = liveTransitFraction,
+                            liveTracking = liveTracking
+                        )
+                    }
+                    Surface(
+                        color = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        shape = MaterialTheme.shapes.large,
+                        tonalElevation = 4.dp,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onTrackOrder(activeOrder.id) }
+                            .testTag("active_order_banner")
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.padding(14.dp)
+                        ) {
+                            Surface(
+                                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.16f),
+                                shape = CircleShape,
+                                modifier = Modifier.size(44.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Filled.TwoWheeler,
+                                        contentDescription = "Track delivery partner",
+                                        tint = MaterialTheme.colorScheme.onPrimary,
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
+                            }
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = tracking.customerNotificationText,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = "${tracking.partner.name} • GPS ${tracking.formattedGpsCoordinates}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                            StatusPill(
+                                text = if (tracking.hasRiderArrived) "Arrived" else "${tracking.remainingMinutes}m GPS",
+                                containerColor = MaterialTheme.colorScheme.surface,
+                                contentColor = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Kochi Location Pill Header
+            if (!isSearching) {
+                item(key = "kochi_location_header") {
             val isAddressInKochi = KochiServiceArea.isKochiAddress(activeAddress)
             Surface(
                 color = MaterialTheme.colorScheme.surface,
@@ -316,78 +417,15 @@ fun StoresHomeScreen(
                     )
                 }
             }
-        }
-
-        // Search Bar
-        item(key = "home_search_bar") {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = onSearchChange,
-                placeholder = {
-                    Text(
-                        text = stringResource(R.string.search_placeholder),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Filled.Search,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                },
-                trailingIcon = {
-                    if (searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { onSearchChange("") }) {
-                            Icon(
-                                imageVector = Icons.Filled.Close,
-                                contentDescription = "Clear search"
-                            )
-                        }
-                    }
-                },
-                singleLine = true,
-                shape = MaterialTheme.shapes.medium,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("medicine_search_input")
-            )
-        }
-
-        // Swiggy / Zomato style Kochi Offers Strip
-        item(key = "promo_offers_carousel") {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    text = "Kochi Deals & Coupons",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    items(PromoCatalog.coupons, key = { it.code }) { coupon ->
-                        PromoDealBannerCard(
-                            coupon = coupon,
-                            isSelected = appliedCouponCode.equals(coupon.code, ignoreCase = true),
-                            onClick = { onApplyCoupon(coupon.code) }
-                        )
-                    }
                 }
             }
-        }
 
-        // Swiggy / Zomato Quick Reorder Strip (for returning customers)
-        if (reorderCandidates.isNotEmpty()) {
-            item(key = "quick_reorder_strip") {
+        // Swiggy / Zomato style Kochi Offers Strip
+        if (!isSearching) {
+            item(key = "promo_offers_carousel") {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = "Order Again from Kochi Stores",
+                        text = "Kochi Deals & Coupons",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -395,11 +433,36 @@ fun StoresHomeScreen(
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        items(reorderCandidates, key = { "reorder_${it.id}" }) { pastOrder ->
-                            QuickReorderCard(
-                                order = pastOrder,
-                                onReorder = { onReorderOrder(pastOrder) }
+                        items(PromoCatalog.coupons, key = { it.code }) { coupon ->
+                            PromoDealBannerCard(
+                                coupon = coupon,
+                                isSelected = appliedCouponCode.equals(coupon.code, ignoreCase = true),
+                                onClick = { onApplyCoupon(coupon.code) }
                             )
+                        }
+                    }
+                }
+            }
+
+            // Swiggy / Zomato Quick Reorder Strip (for returning customers)
+            if (reorderCandidates.isNotEmpty()) {
+                item(key = "quick_reorder_strip") {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = "Order Again from Kochi Stores",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items(reorderCandidates, key = { "reorder_${it.id}" }) { pastOrder ->
+                                QuickReorderCard(
+                                    order = pastOrder,
+                                    onReorder = { onReorderOrder(pastOrder) }
+                                )
+                            }
                         }
                     }
                 }
@@ -503,12 +566,30 @@ fun StoresHomeScreen(
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        text = "No Kochi medical stores match these filters. Try clearing Favorites or Free Delivery filters.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
                         modifier = Modifier.padding(16.dp)
-                    )
+                    ) {
+                        Text(
+                            text = if (isSearching) {
+                                "No Kochi medical stores match \"${searchQuery.trim()}\". Try another store name or Kochi location."
+                            } else {
+                                "No Kochi medical stores match these filters. Try clearing Favorites or Free Delivery filters."
+                            },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        if (isSearching) {
+                            OutlinedButton(
+                                onClick = { onSearchChange("") },
+                                modifier = Modifier
+                                    .heightIn(min = 48.dp)
+                                    .testTag("clear_store_search_button")
+                            ) {
+                                Text("Clear Search")
+                            }
+                        }
+                    }
                 }
             }
         } else {
@@ -606,6 +687,7 @@ fun StoresHomeScreen(
                     onOpenStore = { onStoreClick(offering.storeId) }
                 )
             }
+        }
         }
     }
 }

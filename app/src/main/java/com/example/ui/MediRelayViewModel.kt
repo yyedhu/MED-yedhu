@@ -207,18 +207,11 @@ class MediRelayViewModel(
     ) { params, sort, favIds ->
         params.copy(sortOption = sort, favoriteIds = favIds)
     }.map { params ->
-        val q = params.query.trim()
         val matched = PharmacyCatalog.stores.filter { store ->
             val matches24h = !params.only24h || store.isOpen24Hours
             val matchesFree = !params.freeDeliveryOnly || store.deliveryFee == 0.0
             val matchesFav = !params.favoritesOnly || store.id in params.favoriteIds
-            val matchesQuery = q.isEmpty() ||
-                store.name.contains(q, ignoreCase = true) ||
-                store.neighborhood.contains(q, ignoreCase = true) ||
-                store.specialties.any { it.contains(q, ignoreCase = true) } ||
-                PharmacyCatalog.offeringsForStore(store.id).any {
-                    it.name.contains(q, ignoreCase = true) || it.genericName.contains(q, ignoreCase = true)
-                }
+            val matchesQuery = PharmacyCatalog.matchesStoreQuery(store, params.query)
             matches24h && matchesFree && matchesFav && matchesQuery
         }
         when (params.sortOption) {
