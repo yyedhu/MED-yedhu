@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">MediRelay</string>
+    <string name="nav_stores">Stores</string>
+    <string name="nav_medicines">Medicines</string>
+    <string name="nav_cart">Cart</string>
+    <string name="nav_orders">Orders</string>
+    <string name="nav_profile">Profile</string>
+    <string name="auth_title">Medicines from Kochi medical stores, delivered fast</string>
+    <string name="auth_subtitle">Compare live stock, prices, and delivery ETAs across trusted Kochi pharmacies. Purchases are available exclusively for Kochi addresses.</string>
+    <string name="auth_phone_title">Login with Mobile Number</string>
+    <string name="auth_phone_helper">OTP verified • Used for Kochi order &amp; rider delivery alerts</string>
+    <string name="auth_send_otp">Send OTP</string>
+    <string name="auth_verify_otp">Verify &amp; Login</string>
+    <string name="auth_resend_otp">Resend OTP</string>
+    <string name="auth_change_number">Change</string>
+    <string name="auth_or_continue_with">OR CONTINUE WITH</string>
+    <string name="auth_sign_in_google">Sign in with Google</string>
+    <string name="search_placeholder">Search medicines, generics, or Kochi stores…</string>
+    <string name="hero_badge">KOCHI ONLY • PIN 682XXX</string>
+    <string name="hero_title">Kochi neighborhood pharmacies, unified</string>
+    <string name="hero_subtitle">Compare prices across licensed Kochi medical stores. Doorstep delivery restricted to Kochi customers only.</string>
+    <string name="upload_rx_cta">Attach Rx</string>
+    <string name="rx_required_badge">Rx Required</string>
+    <string name="open_24h_badge">Open 24h</string>
+    <string name="verified_pharmacy_badge">Licensed</string>
+    <string name="empty_cart_title">Your medicine bag is empty</string>
+    <string name="empty_cart_subtitle">Browse Kochi medical stores or view all medicines to compare prices and order to your Kochi address.</string>
+    <string name="empty_orders_title">No medicine orders yet</string>
+    <string name="empty_orders_subtitle">Once you place an order from any Kochi medical store, live fulfillment steps appear here.</string>
+    <string name="place_order">Place Kochi Order</string>
+    <string name="sign_out">Sign out</string>
+</resources>

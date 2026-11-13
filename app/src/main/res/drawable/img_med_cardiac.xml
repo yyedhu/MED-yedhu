@@ -1,0 +1,24 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    <path
+        android:fillColor="#EDF3FB"
+        android:pathData="M0,0h120v120h-120z" />
+    <!-- Blister card base -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#BDD0E8"
+        android:strokeWidth="2"
+        android:pathData="M24,26 C24,21.58 27.58,18 32,18 L88,18 C92.42,18 96,21.58 96,26 L96,94 C96,98.42 92.42,102 88,102 L32,102 C27.58,102 24,98.42 24,94 Z" />
+    <!-- Tablet wells -->
+    <path android:fillColor="#0A3D7A" android:pathData="M43,39m-9,0a9,9 0,1 1,18 0a9,9 0,1 1,-18 0" />
+    <path android:fillColor="#0A3D7A" android:pathData="M77,39m-9,0a9,9 0,1 1,18 0a9,9 0,1 1,-18 0" />
+    <path android:fillColor="#4E86C8" android:pathData="M43,62m-9,0a9,9 0,1 1,18 0a9,9 0,1 1,-18 0" />
+    <path android:fillColor="#4E86C8" android:pathData="M77,62m-9,0a9,9 0,1 1,18 0a9,9 0,1 1,-18 0" />
+    <!-- Heart care emblem -->
+    <path
+        android:fillColor="#D95B34"
+        android:pathData="M60,94 C60,94 46,85.5 46,77.5 C46,73.5 49.2,70.5 53,70.5 C55.8,70.5 58.3,72.1 60,74.4 C61.7,72.1 64.2,70.5 67,70.5 C70.8,70.5 74,73.5 74,77.5 C74,85.5 60,94 60,94 Z" />
+</vector>

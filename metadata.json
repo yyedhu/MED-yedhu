@@ -1,0 +1,6 @@
+{
+  "name": "MediRelay",
+  "description": "Multi-pharmacy medicine delivery app to browse nearby medical stores, compare availability, attach prescriptions, and track doorstep orders.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,441 @@
+{
+  "entities": {
+    "DeliveryAddress": {
+      "title": "DeliveryAddress",
+      "description": "A saved user delivery address for medicine orders.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated owner UID."
+        },
+        "label": {
+          "type": "string",
+          "description": "Short address label such as Home or Work."
+        },
+        "fullAddress": {
+          "type": "string",
+          "description": "Complete street, apartment, and locality address."
+        },
+        "landmark": {
+          "type": "string",
+          "description": "Nearby landmark for rider guidance."
+        },
+        "contactPhone": {
+          "type": "string",
+          "description": "Recipient phone number for delivery coordination."
+        },
+        "isDefault": {
+          "type": "boolean",
+          "description": "Whether this is the default selected delivery address."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp() on creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp() on mutation."
+        }
+      },
+      "required": [
+        "userId",
+        "label",
+        "fullAddress",
+        "landmark",
+        "contactPhone",
+        "isDefault",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CartItem": {
+      "title": "CartItem",
+      "description": "A medicine line item in the user's active pharmacy cart.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated owner UID."
+        },
+        "storeId": {
+          "type": "string",
+          "description": "Identifier of the fulfilling medical store."
+        },
+        "storeName": {
+          "type": "string",
+          "description": "Display name of the fulfilling medical store."
+        },
+        "medicineId": {
+          "type": "string",
+          "description": "Identifier of the medicine product."
+        },
+        "medicineName": {
+          "type": "string",
+          "description": "Display name of the medicine."
+        },
+        "dosage": {
+          "type": "string",
+          "description": "Strength and pack size (e.g., 500mg • 15 tablets)."
+        },
+        "unitPrice": {
+          "type": "number",
+          "description": "Unit price at the selected medical store."
+        },
+        "quantity": {
+          "type": "integer",
+          "description": "Pack quantity in cart (1 to 50)."
+        },
+        "requiresPrescription": {
+          "type": "boolean",
+          "description": "Whether a valid prescription image is required at checkout."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp() on creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp() on mutation."
+        }
+      },
+      "required": [
+        "userId",
+        "storeId",
+        "storeName",
+        "medicineId",
+        "medicineName",
+        "dosage",
+        "unitPrice",
+        "quantity",
+        "requiresPrescription",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "FavoriteStore": {
+      "title": "FavoriteStore",
+      "description": "A user's saved favorite Kochi medical store.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated owner UID."
+        },
+        "storeId": {
+          "type": "string",
+          "description": "Identifier of the favorited Kochi medical store."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp() on creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp() on mutation."
+        }
+      },
+      "required": [
+        "userId",
+        "storeId",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "MedicineOrder": {
+      "title": "MedicineOrder",
+      "description": "A placed medicine delivery order fulfilled by a medical store.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated owner UID."
+        },
+        "storeId": {
+          "type": "string",
+          "description": "Identifier of the fulfilling medical store."
+        },
+        "storeName": {
+          "type": "string",
+          "description": "Display name of the fulfilling medical store."
+        },
+        "itemsSummary": {
+          "type": "string",
+          "description": "Human-readable summary of ordered medicines and quantities."
+        },
+        "itemsPayload": {
+          "type": "string",
+          "description": "Compact medicineId:quantity pairs separated by semicolons for deterministic 1-tap reorder."
+        },
+        "itemCount": {
+          "type": "integer",
+          "description": "Total unit count in the order."
+        },
+        "subtotal": {
+          "type": "number",
+          "description": "Medicine subtotal before delivery fee, coupon, and tip."
+        },
+        "deliveryFee": {
+          "type": "number",
+          "description": "Courier delivery fee charged after promo adjustments."
+        },
+        "discountAmount": {
+          "type": "number",
+          "description": "Promo coupon discount applied to the order."
+        },
+        "couponCode": {
+          "type": "string",
+          "description": "Applied promo coupon code (empty if none)."
+        },
+        "tipAmount": {
+          "type": "number",
+          "description": "Optional tip added for the delivery partner."
+        },
+        "totalAmount": {
+          "type": "number",
+          "description": "Final order amount paid."
+        },
+        "paymentMethod": {
+          "type": "string",
+          "enum": [
+            "upi",
+            "card",
+            "cod"
+          ],
+          "description": "Customer selected payment method."
+        },
+        "deliveryAddress": {
+          "type": "string",
+          "description": "Snapshot of the delivery destination address."
+        },
+        "deliveryInstructions": {
+          "type": "string",
+          "description": "Customer drop-off instructions for store and rider."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "placed",
+            "confirmed",
+            "packed",
+            "out_for_delivery",
+            "delivered",
+            "cancelled"
+          ],
+          "description": "Current fulfillment lifecycle status."
+        },
+        "hasPrescription": {
+          "type": "boolean",
+          "description": "Whether a prescription image was attached via Photo Picker."
+        },
+        "prescriptionFileName": {
+          "type": "string",
+          "description": "Display label of attached prescription media."
+        },
+        "estimatedMinutes": {
+          "type": "integer",
+          "description": "Estimated doorstep delivery duration in minutes."
+        },
+        "rating": {
+          "type": "integer",
+          "description": "Customer post-delivery rating (0 if unrated, 1-5 after rating)."
+        },
+        "reviewComment": {
+          "type": "string",
+          "description": "Optional post-delivery customer feedback."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp() on creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp() on mutation."
+        }
+      },
+      "required": [
+        "userId",
+        "storeId",
+        "storeName",
+        "itemsSummary",
+        "itemsPayload",
+        "itemCount",
+        "subtotal",
+        "deliveryFee",
+        "discountAmount",
+        "couponCode",
+        "tipAmount",
+        "totalAmount",
+        "paymentMethod",
+        "deliveryAddress",
+        "deliveryInstructions",
+        "status",
+        "hasPrescription",
+        "prescriptionFileName",
+        "estimatedMinutes",
+        "rating",
+        "reviewComment",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "LiveOrderTracking": {
+      "title": "LiveOrderTracking",
+      "description": "Real-time Google Maps GPS telemetry and assigned delivery partner metadata for an order.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated owner UID."
+        },
+        "orderId": {
+          "type": "string",
+          "description": "Identifier of the associated MedicineOrder."
+        },
+        "storeId": {
+          "type": "string",
+          "description": "Identifier of the fulfilling Kochi medical store."
+        },
+        "storeName": {
+          "type": "string",
+          "description": "Display name of the fulfilling Kochi medical store."
+        },
+        "storeNeighborhood": {
+          "type": "string",
+          "description": "Kochi store locality label."
+        },
+        "destinationArea": {
+          "type": "string",
+          "description": "Kochi customer destination zone label."
+        },
+        "transitCorridor": {
+          "type": "string",
+          "description": "Active Kochi road corridor label."
+        },
+        "partnerId": {
+          "type": "string",
+          "description": "Assigned delivery partner identifier."
+        },
+        "partnerName": {
+          "type": "string",
+          "description": "Assigned delivery partner full name."
+        },
+        "partnerPhone": {
+          "type": "string",
+          "description": "Assigned delivery partner contact number."
+        },
+        "partnerVehicle": {
+          "type": "string",
+          "description": "Assigned delivery partner vehicle registration and type."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "placed",
+            "confirmed",
+            "packed",
+            "out_for_delivery",
+            "delivered",
+            "cancelled"
+          ],
+          "description": "Current order lifecycle status synchronized with tracking."
+        },
+        "progressFraction": {
+          "type": "number",
+          "description": "Normalized transit completion fraction from 0.0 to 1.0."
+        },
+        "storeLat": {
+          "type": "number",
+          "description": "Kochi pharmacy latitude."
+        },
+        "storeLng": {
+          "type": "number",
+          "description": "Kochi pharmacy longitude."
+        },
+        "destLat": {
+          "type": "number",
+          "description": "Customer Kochi destination latitude."
+        },
+        "destLng": {
+          "type": "number",
+          "description": "Customer Kochi destination longitude."
+        },
+        "partnerLat": {
+          "type": "number",
+          "description": "Live GPS latitude of the delivery partner."
+        },
+        "partnerLng": {
+          "type": "number",
+          "description": "Live GPS longitude of the delivery partner."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp() on creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp() on GPS update."
+        }
+      },
+      "required": [
+        "userId",
+        "orderId",
+        "storeId",
+        "storeName",
+        "storeNeighborhood",
+        "destinationArea",
+        "transitCorridor",
+        "partnerId",
+        "partnerName",
+        "partnerPhone",
+        "partnerVehicle",
+        "status",
+        "progressFraction",
+        "storeLat",
+        "storeLng",
+        "destLat",
+        "destLng",
+        "partnerLat",
+        "partnerLng",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/addresses/{addressId}": {
+      "schema": {
+        "$ref": "#/entities/DeliveryAddress"
+      },
+      "description": "Per-user saved delivery addresses isolated by userId."
+    },
+    "/users/{userId}/cartItems/{cartItemId}": {
+      "schema": {
+        "$ref": "#/entities/CartItem"
+      },
+      "description": "Per-user active pharmacy cart items isolated by userId."
+    },
+    "/users/{userId}/orders/{orderId}": {
+      "schema": {
+        "$ref": "#/entities/MedicineOrder"
+      },
+      "description": "Per-user medicine delivery orders isolated by userId."
+    },
+    "/users/{userId}/tracking/{orderId}": {
+      "schema": {
+        "$ref": "#/entities/LiveOrderTracking"
+      },
+      "description": "Per-user real-time Google Maps rider GPS coordinates isolated by userId."
+    }
+  }
+}

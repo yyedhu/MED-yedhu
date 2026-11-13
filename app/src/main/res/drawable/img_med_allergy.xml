@@ -1,0 +1,25 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    <path
+        android:fillColor="#EAF2FA"
+        android:pathData="M0,0h120v120h-120z" />
+    <!-- Spray / Relief Bottle -->
+    <path
+        android:fillColor="#0A3D7A"
+        android:pathData="M53,20 L67,20 L69,36 L51,36 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#A7C2E3"
+        android:strokeWidth="2"
+        android:pathData="M40,42 C40,38.69 42.69,36 46,36 L74,36 C77.31,36 80,38.69 80,42 L80,96 C80,99.31 77.31,102 74,102 L46,102 C42.69,102 40,99.31 40,96 Z" />
+    <path
+        android:fillColor="#D6E4FF"
+        android:pathData="M45,54 L75,54 L75,86 L45,86 Z" />
+    <!-- Relief droplet -->
+    <path
+        android:fillColor="#0277BD"
+        android:pathData="M60,59 C60,59 51,69 51,74.5 C51,79.47 55.03,83.5 60,83.5 C64.97,83.5 69,79.47 69,74.5 C69,69 60,59 60,59 Z" />
+</vector>

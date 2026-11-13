@@ -1,0 +1,32 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    <path
+        android:fillColor="#EAF1FB"
+        android:pathData="M0,0h120v120h-120z" />
+    <!-- Rx box card -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#BED0EC"
+        android:strokeWidth="2"
+        android:pathData="M20,26 C20,21.58 23.58,18 28,18 L92,18 C96.42,18 100,21.58 100,26 L100,94 C100,98.42 96.42,102 92,102 L28,102 C23.58,102 20,98.42 20,94 Z" />
+    <!-- Top capsule -->
+    <path
+        android:fillColor="#0277BD"
+        android:pathData="M34,46 C34,39.37 39.37,34 46,34 L60,34 L60,58 L46,58 C39.37,58 34,52.63 34,46 Z" />
+    <path
+        android:fillColor="#0A3D7A"
+        android:pathData="M60,34 L74,34 C80.63,34 86,39.37 86,46 C86,52.63 80.63,58 74,58 L60,58 Z" />
+    <!-- Bottom tablet strip accent -->
+    <path
+        android:fillColor="#0A3D7A"
+        android:pathData="M36,74 C36,70.69 38.69,68 42,68 L78,68 C81.31,68 84,70.69 84,74 L84,82 C84,85.31 81.31,88 78,88 L42,88 C38.69,88 36,85.31 36,82 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M50,78m-4,0a4,4 0,1 1,8 0a4,4 0,1 1,-8 0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M70,78m-4,0a4,4 0,1 1,8 0a4,4 0,1 1,-8 0" />
+</vector>

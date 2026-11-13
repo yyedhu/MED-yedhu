@@ -1,0 +1,308 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Shared security primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function hasValidTimestampsOnCreate(data) {
+      return data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function hasValidTimestampsOnUpdate(data, oldData) {
+      return data.createdAt == oldData.createdAt &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    // Entity validation helpers
+    function isValidDeliveryAddress(data, userId) {
+      return data.userId == userId &&
+             data.label is string && data.label.size() >= 1 && data.label.size() <= 40 &&
+             data.fullAddress is string && data.fullAddress.size() >= 5 && data.fullAddress.size() <= 240 &&
+             data.landmark is string && data.landmark.size() <= 120 &&
+             data.contactPhone is string && data.contactPhone.size() >= 7 && data.contactPhone.size() <= 20 &&
+             data.isDefault is bool;
+    }
+
+    function isValidCartItem(data, userId) {
+      return data.userId == userId &&
+             isValidId(data.storeId) &&
+             data.storeName is string && data.storeName.size() >= 1 && data.storeName.size() <= 80 &&
+             isValidId(data.medicineId) &&
+             data.medicineName is string && data.medicineName.size() >= 1 && data.medicineName.size() <= 100 &&
+             data.dosage is string && data.dosage.size() >= 1 && data.dosage.size() <= 60 &&
+             data.unitPrice is number && data.unitPrice > 0 && data.unitPrice <= 50000 &&
+             data.quantity is int && data.quantity >= 1 && data.quantity <= 50 &&
+             data.requiresPrescription is bool;
+    }
+
+    function isValidOrderStatus(status) {
+      return status in ['placed', 'confirmed', 'packed', 'out_for_delivery', 'delivered', 'cancelled'];
+    }
+
+    function isValidOrderTransition(oldStatus, newStatus) {
+      return (oldStatus == 'placed' && (newStatus == 'confirmed' || newStatus == 'cancelled')) ||
+             (oldStatus == 'confirmed' && (newStatus == 'packed' || newStatus == 'cancelled')) ||
+             (oldStatus == 'packed' && newStatus == 'out_for_delivery') ||
+             (oldStatus == 'out_for_delivery' && newStatus == 'delivered');
+    }
+
+    function isValidPaymentMethod(method) {
+      return method in ['upi', 'card', 'cod'];
+    }
+
+    function isValidFavoriteStore(data, userId, storeId) {
+      return data.userId == userId &&
+             data.storeId == storeId &&
+             isValidId(data.storeId);
+    }
+
+    function isValidMedicineOrder(data, userId) {
+      return data.userId == userId &&
+             isValidId(data.storeId) &&
+             data.storeName is string && data.storeName.size() >= 1 && data.storeName.size() <= 80 &&
+             data.itemsSummary is string && data.itemsSummary.size() >= 1 && data.itemsSummary.size() <= 400 &&
+             data.itemsPayload is string && data.itemsPayload.size() <= 600 &&
+             data.itemCount is int && data.itemCount >= 1 && data.itemCount <= 100 &&
+             data.subtotal is number && data.subtotal > 0 && data.subtotal <= 500000 &&
+             data.deliveryFee is number && data.deliveryFee >= 0 && data.deliveryFee <= 5000 &&
+             data.discountAmount is number && data.discountAmount >= 0 && data.discountAmount <= 500000 &&
+             data.couponCode is string && data.couponCode.size() <= 32 &&
+             data.tipAmount is number && data.tipAmount >= 0 && data.tipAmount <= 2000 &&
+             data.totalAmount is number && data.totalAmount >= 0 && data.totalAmount <= 507000 &&
+             isValidPaymentMethod(data.paymentMethod) &&
+             data.deliveryAddress is string && data.deliveryAddress.size() >= 5 && data.deliveryAddress.size() <= 260 &&
+             data.deliveryInstructions is string && data.deliveryInstructions.size() <= 160 &&
+             isValidOrderStatus(data.status) &&
+             data.hasPrescription is bool &&
+             data.prescriptionFileName is string && data.prescriptionFileName.size() <= 160 &&
+             data.estimatedMinutes is int && data.estimatedMinutes >= 5 && data.estimatedMinutes <= 240 &&
+             data.rating is int && data.rating >= 0 && data.rating <= 5 &&
+             data.reviewComment is string && data.reviewComment.size() <= 300;
+    }
+
+    function isValidLatitude(lat) {
+      return lat is number && lat >= -90.0 && lat <= 90.0;
+    }
+
+    function isValidLongitude(lng) {
+      return lng is number && lng >= -180.0 && lng <= 180.0;
+    }
+
+    function isValidLiveTracking(data, userId, orderId) {
+      return data.userId == userId &&
+             data.orderId == orderId &&
+             isValidId(data.storeId) &&
+             data.storeName is string && data.storeName.size() >= 1 && data.storeName.size() <= 80 &&
+             data.storeNeighborhood is string && data.storeNeighborhood.size() >= 1 && data.storeNeighborhood.size() <= 100 &&
+             data.destinationArea is string && data.destinationArea.size() >= 1 && data.destinationArea.size() <= 100 &&
+             data.transitCorridor is string && data.transitCorridor.size() >= 1 && data.transitCorridor.size() <= 120 &&
+             isValidId(data.partnerId) &&
+             data.partnerName is string && data.partnerName.size() >= 1 && data.partnerName.size() <= 80 &&
+             data.partnerPhone is string && data.partnerPhone.size() >= 7 && data.partnerPhone.size() <= 20 &&
+             data.partnerVehicle is string && data.partnerVehicle.size() >= 3 && data.partnerVehicle.size() <= 80 &&
+             isValidOrderStatus(data.status) &&
+             data.progressFraction is number && data.progressFraction >= 0.0 && data.progressFraction <= 1.0 &&
+             isValidLatitude(data.storeLat) && isValidLongitude(data.storeLng) &&
+             isValidLatitude(data.destLat) && isValidLongitude(data.destLng) &&
+             isValidLatitude(data.partnerLat) && isValidLongitude(data.partnerLng);
+    }
+
+    match /users/{userId} {
+
+      // User Saved Delivery Addresses
+      match /addresses/{addressId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) && isValidId(addressId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(addressId) &&
+                         incoming().keys().hasAll([
+                           'userId', 'label', 'fullAddress', 'landmark',
+                           'contactPhone', 'isDefault', 'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'label', 'fullAddress', 'landmark',
+                           'contactPhone', 'isDefault', 'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidDeliveryAddress(incoming(), userId) &&
+                         hasValidTimestampsOnCreate(incoming());
+
+        allow update: if isOwner(userId) &&
+                         isValidId(addressId) &&
+                         isValidDeliveryAddress(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         hasValidTimestampsOnUpdate(incoming(), existing()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'label', 'fullAddress', 'landmark', 'contactPhone', 'isDefault', 'updatedAt'
+                         ]);
+
+        allow delete: if isOwner(userId) && isValidId(addressId);
+      }
+
+      // User Active Pharmacy Cart Items
+      match /cartItems/{cartItemId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) && isValidId(cartItemId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(cartItemId) &&
+                         incoming().keys().hasAll([
+                           'userId', 'storeId', 'storeName', 'medicineId', 'medicineName',
+                           'dosage', 'unitPrice', 'quantity', 'requiresPrescription',
+                           'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'storeId', 'storeName', 'medicineId', 'medicineName',
+                           'dosage', 'unitPrice', 'quantity', 'requiresPrescription',
+                           'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidCartItem(incoming(), userId) &&
+                         hasValidTimestampsOnCreate(incoming());
+
+        allow update: if isOwner(userId) &&
+                         isValidId(cartItemId) &&
+                         isValidCartItem(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().storeId == existing().storeId &&
+                         incoming().medicineId == existing().medicineId &&
+                         hasValidTimestampsOnUpdate(incoming(), existing()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['quantity', 'updatedAt']);
+
+        allow delete: if isOwner(userId) && isValidId(cartItemId);
+      }
+
+      // User Favorite Kochi Medical Stores
+      match /favorites/{storeId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) && isValidId(storeId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(storeId) &&
+                         incoming().keys().hasAll(['userId', 'storeId', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'storeId', 'createdAt', 'updatedAt']) &&
+                         isValidFavoriteStore(incoming(), userId, storeId) &&
+                         hasValidTimestampsOnCreate(incoming());
+
+        allow update: if false;
+        allow delete: if isOwner(userId) && isValidId(storeId);
+      }
+
+      // User Medicine Orders (append-only record with terminal state lock & post-delivery rating)
+      match /orders/{orderId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) && isValidId(orderId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(orderId) &&
+                         incoming().keys().hasAll([
+                           'userId', 'storeId', 'storeName', 'itemsSummary', 'itemsPayload', 'itemCount',
+                           'subtotal', 'deliveryFee', 'discountAmount', 'couponCode', 'tipAmount',
+                           'totalAmount', 'paymentMethod', 'deliveryAddress', 'deliveryInstructions',
+                           'status', 'hasPrescription', 'prescriptionFileName',
+                           'estimatedMinutes', 'rating', 'reviewComment', 'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'storeId', 'storeName', 'itemsSummary', 'itemsPayload', 'itemCount',
+                           'subtotal', 'deliveryFee', 'discountAmount', 'couponCode', 'tipAmount',
+                           'totalAmount', 'paymentMethod', 'deliveryAddress', 'deliveryInstructions',
+                           'status', 'hasPrescription', 'prescriptionFileName',
+                           'estimatedMinutes', 'rating', 'reviewComment', 'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().status == 'placed' &&
+                         incoming().rating == 0 &&
+                         incoming().reviewComment == '' &&
+                         isValidMedicineOrder(incoming(), userId) &&
+                         hasValidTimestampsOnCreate(incoming());
+
+        allow update: if isOwner(userId) &&
+                         isValidId(orderId) &&
+                         isValidMedicineOrder(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         hasValidTimestampsOnUpdate(incoming(), existing()) &&
+                         (
+                           (
+                             existing().status != 'delivered' &&
+                             existing().status != 'cancelled' &&
+                             isValidOrderTransition(existing().status, incoming().status) &&
+                             incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])
+                           ) ||
+                           (
+                             existing().status == 'delivered' &&
+                             incoming().status == 'delivered' &&
+                             incoming().rating >= 1 &&
+                             incoming().rating <= 5 &&
+                             incoming().diff(existing()).affectedKeys().hasOnly(['rating', 'reviewComment', 'updatedAt'])
+                           )
+                         );
+
+        allow delete: if false;
+      }
+
+      // Live Google Maps Delivery Partner GPS Tracking
+      match /tracking/{orderId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) && isValidId(orderId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(orderId) &&
+                         incoming().keys().hasAll([
+                           'userId', 'orderId', 'storeId', 'storeName', 'storeNeighborhood',
+                           'destinationArea', 'transitCorridor', 'partnerId', 'partnerName',
+                           'partnerPhone', 'partnerVehicle', 'status', 'progressFraction',
+                           'storeLat', 'storeLng', 'destLat', 'destLng', 'partnerLat', 'partnerLng',
+                           'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'orderId', 'storeId', 'storeName', 'storeNeighborhood',
+                           'destinationArea', 'transitCorridor', 'partnerId', 'partnerName',
+                           'partnerPhone', 'partnerVehicle', 'status', 'progressFraction',
+                           'storeLat', 'storeLng', 'destLat', 'destLng', 'partnerLat', 'partnerLng',
+                           'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidLiveTracking(incoming(), userId, orderId) &&
+                         hasValidTimestampsOnCreate(incoming());
+
+        allow update: if isOwner(userId) &&
+                         isValidId(orderId) &&
+                         isValidLiveTracking(incoming(), userId, orderId) &&
+                         existing().status != 'delivered' &&
+                         existing().status != 'cancelled' &&
+                         incoming().userId == existing().userId &&
+                         incoming().orderId == existing().orderId &&
+                         incoming().storeId == existing().storeId &&
+                         hasValidTimestampsOnUpdate(incoming(), existing()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'status', 'progressFraction', 'partnerLat', 'partnerLng',
+                           'transitCorridor', 'updatedAt'
+                         ]);
+
+        allow delete: if false;
+      }
+    }
+  }
+}

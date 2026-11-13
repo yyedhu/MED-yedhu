@@ -1,0 +1,25 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    <path
+        android:fillColor="#ECF2FA"
+        android:pathData="M0,0h120v120h-120z" />
+    <!-- First Aid Kit Box -->
+    <path
+        android:fillColor="#0A3D7A"
+        android:pathData="M45,24 C45,20.69 47.69,18 51,18 L69,18 C72.31,18 75,20.69 75,24 L75,34 L45,34 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#0A3D7A"
+        android:strokeWidth="3"
+        android:pathData="M22,36 C22,31.58 25.58,28 30,28 L90,28 C94.42,28 98,31.58 98,36 L98,94 C98,98.42 94.42,102 90,102 L30,102 C25.58,102 22,98.42 22,94 Z" />
+    <!-- Medical Cross -->
+    <path
+        android:fillColor="#0277BD"
+        android:pathData="M54,46 L66,46 L66,84 L54,84 Z" />
+    <path
+        android:fillColor="#0277BD"
+        android:pathData="M41,59 L79,59 L79,71 L41,71 Z" />
+</vector>

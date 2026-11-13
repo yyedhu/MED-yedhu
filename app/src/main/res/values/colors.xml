@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="medical_blue_primary">#FF0A3D7A</color>
+    <color name="medical_blue_navy">#FF042047</color>
+    <color name="medical_blue_cerulean">#FF0277BD</color>
+    <color name="medical_blue_ice">#FFD6E4FF</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>
