@@ -32,4 +32,5 @@
     <string name="empty_orders_subtitle">Once you place an order from any Kochi medical store, live fulfillment steps appear here.</string>
     <string name="place_order">Place Kochi Order</string>
     <string name="sign_out">Sign out</string>
+    <string name="default_web_client_id">placeholder-web-client-id</string>
 </resources>
